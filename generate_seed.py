@@ -1,0 +1,301 @@
+import uuid
+import datetime
+import random
+
+lines = []
+lines.append("USE [SportBook];")
+lines.append("GO")
+lines.append("SET NOCOUNT ON;")
+lines.append("BEGIN TRANSACTION;")
+lines.append("BEGIN TRY")
+
+# 1. ROLES: 50 roles (keep existing 2, add 48)
+# Existing: 0BBF8EA7-78F8-4B04-A8F0-BDB4B1D77F38 (client), 636AEA97-4FD2-4E06-8CC3-D559D178FF71 (administrator)
+client_role_id = "0BBF8EA7-78F8-4B04-A8F0-BDB4B1D77F38"
+admin_role_id = "636AEA97-4FD2-4E06-8CC3-D559D178FF71"
+
+role_ids = [client_role_id, admin_role_id]
+role_names = [
+    "manager", "supervisor", "court_keeper", "receptionist", "financial_officer",
+    "coach_tennis", "coach_badminton", "coach_football", "coach_basketball", "coach_swimming",
+    "maintenance_lead", "cleaner", "security_guard", "event_organizer", "marketing_staff",
+    "support_agent", "vip_member", "referee", "medical_staff", "inventory_manager",
+    "nutritionist", "trainer_fitness", "equipment_technician", "auditor", "system_operator",
+    "league_coordinator", "booking_coordinator", "customer_relations", "operations_director", "branch_manager",
+    "shift_leader", "head_referee", "community_manager", "tournament_director", "assistant_coach",
+    "apprentice_coach", "pro_athlete", "field_inspector", "lead_electrician", "grounds_keeper",
+    "cashier", "desk_attendant", "wellness_consultant", "media_coordinator", "sponsor_liaison",
+    "youth_coordinator", "senior_coordinator", "data_analyst"
+]
+
+for idx, rname in enumerate(role_names, start=3):
+    rid = str(uuid.uuid4()).upper()
+    role_ids.append(rid)
+    lines.append(f"INSERT INTO [Roles] ([RoleId], [Name], [Description]) VALUES ('{rid}', N'{rname}', N'System role for {rname.replace('_', ' ')}');")
+
+# 2. USERS: 50 users (keep existing 1, add 49)
+# Password hash for Password123!
+pwd_hash = "$2a$11$wSLCJClDW2KJez4GGNRJ8.k2MAZJxoTGdp.3IUEOEGSnmrWzgMKAC"
+existing_user_id = "B8194F05-4863-4634-B0E5-7736B830D73E"
+user_ids = [existing_user_id]
+
+first_names = [
+    "Alex", "Brian", "Catherine", "David", "Emma", "Felix", "Grace", "Henry", "Isabella", "Jack",
+    "Kevin", "Laura", "Michael", "Nina", "Oliver", "Paula", "Quinn", "Rachel", "Samuel", "Tina",
+    "Ulysses", "Victoria", "William", "Xavier", "Yasmine", "Zachary", "Liam", "Sophia", "Noah", "Olivia",
+    "James", "Ava", "Lucas", "Mia", "Benjamin", "Charlotte", "Ethan", "Amelia", "Daniel", "Harper",
+    "Matthew", "Evelyn", "Aiden", "Abigail", "Joseph", "Emily", "Sebastian", "Ella", "Jackson"
+]
+last_names = [
+    "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez",
+    "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin",
+    "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson",
+    "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores",
+    "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell", "Carter"
+]
+
+for i in range(49):
+    uid = str(uuid.uuid4()).upper()
+    user_ids.append(uid)
+    fn = first_names[i % len(first_names)]
+    ln = last_names[i % len(last_names)]
+    email = f"user{i+2}.{fn.lower()}@sportbook.local"
+    phone = f"09{random.randint(10000000, 99999999)}"
+    reg_date = (datetime.datetime(2026, 1, 1) + datetime.timedelta(days=i*2, hours=i)).strftime('%Y-%m-%d %H:%M:%S')
+    lines.append(f"INSERT INTO [Users] ([UserId], [FirstName], [LastName], [Email], [PasswordHash], [Phone], [RegistrationDate], [IsActive]) VALUES ('{uid}', N'{fn}', N'{ln}', N'{email}', N'{pwd_hash}', N'{phone}', '{reg_date}', 1);")
+
+# 3. USERROLES: 50 user roles (existing user already has 1, add 49 user roles)
+# Assign each user to a role
+for i in range(1, 50):
+    urid = str(uuid.uuid4()).upper()
+    u_target = user_ids[i]
+    r_target = role_ids[i % len(role_ids)]
+    assigned_date = (datetime.datetime(2026, 1, 1) + datetime.timedelta(days=i*2)).strftime('%Y-%m-%d %H:%M:%S')
+    lines.append(f"INSERT INTO [UserRoles] ([Id], [UserId], [RoleId], [AssignedDate]) VALUES ('{urid}', '{u_target}', '{r_target}', '{assigned_date}');")
+
+# 4. SPORTS FACILITIES: 50 facilities
+facility_ids = []
+cities = ["Hanoi", "Ho Chi Minh City", "Da Nang", "Hai Phong", "Can Tho", "Nha Trang", "Vung Tau", "Hue", "Da Lat", "Bien Hoa"]
+districts = ["District 1", "District 3", "District 7", "Cau Giay", "Ba Dinh", "Tay Ho", "Hai Chau", "Son Tra", "Ninh Kieu", "Tan Binh"]
+
+for i in range(50):
+    fid = str(uuid.uuid4()).upper()
+    facility_ids.append(fid)
+    city = cities[i % len(cities)]
+    dist = districts[i % len(districts)]
+    name = f"SportBook Arena {i+1} - {city}"
+    addr = f"{10 + i * 3} Nguyen Trai, {dist}"
+    phone = f"024{random.randint(1000000, 9999999)}"
+    email = f"contact@arena{i+1}.sportbook.com"
+    lines.append(f"INSERT INTO [SportsFacilities] ([FacilityId], [Name], [Address], [City], [Phone], [Email], [IsActive]) VALUES ('{fid}', N'{name}', N'{addr}', N'{city}', N'{phone}', N'{email}', 1);")
+
+# 5. SPORTS: 50 sports
+sports_data = [
+    ("Football 5v5", "Mini football artificial turf", "https://img.icons8.com/color/96/football.png"),
+    ("Football 7v7", "7-a-side outdoor artificial turf", "https://img.icons8.com/color/96/football.png"),
+    ("Football 11v11", "Standard full size football stadium", "https://img.icons8.com/color/96/stadium.png"),
+    ("Tennis", "Hard & clay court tennis", "https://img.icons8.com/color/96/tennis.png"),
+    ("Badminton", "Standard indoor rubber mat badminton", "https://img.icons8.com/color/96/badminton.png"),
+    ("Basketball", "Indoor wooden floor basketball", "https://img.icons8.com/color/96/basketball.png"),
+    ("Volleyball", "Indoor & sand beach volleyball", "https://img.icons8.com/color/96/volleyball.png"),
+    ("Table Tennis", "Professional ping pong tables", "https://img.icons8.com/color/96/ping-pong.png"),
+    ("Pickleball", "Trendy pickleball court", "https://img.icons8.com/color/96/racquet.png"),
+    ("Squash", "Enclosed indoor squash arena", "https://img.icons8.com/color/96/squash.png"),
+    ("Swimming 25m", "Indoor heated 25-meter lap pool", "https://img.icons8.com/color/96/swimming.png"),
+    ("Swimming 50m", "Olympic standard 50-meter swimming pool", "https://img.icons8.com/color/96/swimming.png"),
+    ("Padel", "Modern glass wall padel court", "https://img.icons8.com/color/96/tennis.png"),
+    ("Futsal", "Indoor FIFA futsal wooden/parquet court", "https://img.icons8.com/color/96/football.png"),
+    ("Golf Simulator", "High-tech 3D virtual golf driving booth", "https://img.icons8.com/color/96/golf.png"),
+    ("Cricket Net", "Outdoor batting and bowling cricket cage", "https://img.icons8.com/color/96/cricket.png"),
+    ("Archery", "Indoor 18-meter target archery lane", "https://img.icons8.com/color/96/archery.png"),
+    ("Shooting Range", "Electronic indoor 10m air pistol range", "https://img.icons8.com/color/96/target.png"),
+    ("Handball", "Indoor international standard handball court", "https://img.icons8.com/color/96/handball.png"),
+    ("Billiards Pool", "Standard 9-ball tournament pool table", "https://img.icons8.com/color/96/billiards.png"),
+    ("Snooker", "Full-sized 12ft tournament snooker table", "https://img.icons8.com/color/96/billiards.png"),
+    ("Boxing Ring", "Elevated boxing ring with bags", "https://img.icons8.com/color/96/boxing.png"),
+    ("MMA Cage", "Standard octagonal fighting cage", "https://img.icons8.com/color/96/karate.png"),
+    ("Judo Tatami", "Certified Olympic judo mat", "https://img.icons8.com/color/96/judo.png"),
+    ("Taekwondo Dojang", "Shock-absorbent martial arts flooring", "https://img.icons8.com/color/96/taekwondo.png"),
+    ("Yoga Studio", "Serene hardwood bamboo floor yoga studio", "https://img.icons8.com/color/96/yoga.png"),
+    ("Pilates Reformer", "Dedicated pilates studio with reformers", "https://img.icons8.com/color/96/pilates.png"),
+    ("CrossFit Box", "Heavy lifting rigs, bumper plates & assault bikes", "https://img.icons8.com/color/96/barbell.png"),
+    ("Spinning Cycling", "Indoor rhythmic cycling studio with stage", "https://img.icons8.com/color/96/cycling.png"),
+    ("Rock Climbing", "Bouldering & top-rope indoor climbing wall", "https://img.icons8.com/color/96/climbing.png"),
+    ("Gymnastics Floor", "Spring floor with foam pits and bars", "https://img.icons8.com/color/96/gymnastics.png"),
+    ("Beach Volleyball", "Deep sand outdoor beach volleyball court", "https://img.icons8.com/color/96/volleyball.png"),
+    ("Street Basketball 3x3", "Outdoor half-court 3x3 asphalt basketball", "https://img.icons8.com/color/96/basketball.png"),
+    ("Fencing Piste", "Conductive metal fencing strip with scorers", "https://img.icons8.com/color/96/fencing.png"),
+    ("Skatepark", "Concrete bowl and street street skateboarding", "https://img.icons8.com/color/96/skateboard.png"),
+    ("Roller Skating", "Smooth polished concrete roller rink", "https://img.icons8.com/color/96/roller-skate.png"),
+    ("Water Polo", "Deep pool setup with water polo nets", "https://img.icons8.com/color/96/water-polo.png"),
+    ("Ice Skating", "Refrigerated artificial indoor ice rink", "https://img.icons8.com/color/96/ice-skating.png"),
+    ("Ice Hockey", "Enclosed barrier ice hockey rink", "https://img.icons8.com/color/96/ice-hockey.png"),
+    ("Rowing Tank", "Indoor rowing propulsion simulation tank", "https://img.icons8.com/color/96/rowing.png"),
+    ("Baseball Cage", "Automated indoor baseball pitching batting cage", "https://img.icons8.com/color/96/baseball.png"),
+    ("Darts Alley", "Electronic & steel tip tournament dart boards", "https://img.icons8.com/color/96/darts.png"),
+    ("Rugby Pitch", "Natural grass rugby & touch field", "https://img.icons8.com/color/96/rugby.png"),
+    ("Ultimate Frisbee", "Multi-purpose green turf frisbee zone", "https://img.icons8.com/color/96/frisbee.png"),
+    ("Track Sprint 100m", "Synthetic rubber tartan sprint running lanes", "https://img.icons8.com/color/96/running.png"),
+    ("Bowling Alley", "Automated 10-pin wood lane bowling alley", "https://img.icons8.com/color/96/bowling.png"),
+    ("Lacrosse Field", "Synthetic turf open lacrosse field", "https://img.icons8.com/color/96/lacrosse.png"),
+    ("Floorball Court", "Enclosed boundary board floorball area", "https://img.icons8.com/color/96/hockey.png"),
+    ("Dodgeball Arena", "Trampoline-walled dodgeball court", "https://img.icons8.com/color/96/dodgeball.png"),
+    ("Paddleboard Lagoon", "Calm water standup paddleboard zone", "https://img.icons8.com/color/96/surfing.png")
+]
+
+sport_ids = []
+for sname, sdesc, sicon in sports_data:
+    sid = str(uuid.uuid4()).upper()
+    sport_ids.append(sid)
+    lines.append(f"INSERT INTO [Sports] ([SportId], [Name], [Description], [IconUrl]) VALUES ('{sid}', N'{sname}', N'{sdesc}', N'{sicon}');")
+
+# 6. COURTS: 50 courts (1 for each facility)
+court_ids = []
+surface_types = ["Artificial Turf", "Hard Court", "Wooden Parquet", "Rubber Mat", "Clay", "Sand", "Synthetic Acrylic"]
+for i in range(50):
+    cid = str(uuid.uuid4()).upper()
+    court_ids.append(cid)
+    fid = facility_ids[i]
+    st = surface_types[i % len(surface_types)]
+    indoor = 1 if i % 2 == 0 else 0
+    cap = 10 + (i % 6) * 4
+    cname = f"Court {chr(65 + (i % 26))}{i // 26 + 1} - Premium"
+    desc = f"High grade {st} playing surface with LED floodlighting and sound system."
+    img = f"https://images.unsplash.com/photo-1546519638-68e109498ffc?w=600&auto=format&fit=crop&q=80"
+    lines.append(f"INSERT INTO [Courts] ([CourtId], [FacilityId], [Name], [SurfaceType], [IsIndoor], [PlayerCapacity], [Description], [ImageUrl], [IsActive]) VALUES ('{cid}', '{fid}', N'{cname}', N'{st}', {indoor}, {cap}, N'{desc}', N'{img}', 1);")
+
+# 7. EQUIPMENT: 50 items (1 for each facility)
+equipment_ids = []
+equipment_names = [
+    ("Premium Match Ball", 25000, 20),
+    ("Tournament Racket Set", 50000, 15),
+    ("Pro Training Cones (10x)", 15000, 30),
+    ("Player Team Bibs (5x)", 20000, 25),
+    ("Goalkeeper Gloves", 30000, 10),
+    ("Protective Shin Guards", 15000, 15),
+    ("Pickleball Paddle & Balls", 40000, 18),
+    ("Tennis Balls Can (4-pack)", 35000, 50),
+    ("Badminton Shuttlecocks Tube", 45000, 40),
+    ("Resistance Bands Set", 20000, 20)
+]
+for i in range(50):
+    eid = str(uuid.uuid4()).upper()
+    equipment_ids.append(eid)
+    fid = facility_ids[i]
+    ename, eprice, eqty = equipment_names[i % len(equipment_names)]
+    ename_full = f"{ename} - Arena {i+1}"
+    lines.append(f"INSERT INTO [Equipment] ([EquipmentId], [FacilityId], [Name], [RentalPrice], [AvailableQuantity], [IsActive]) VALUES ('{eid}', '{fid}', N'{ename_full}', {eprice:.2f}, {eqty}, 1);")
+
+# 8. COURT SPORTS: 50 records (link court i to sport i)
+for i in range(50):
+    csid = str(uuid.uuid4()).upper()
+    cid = court_ids[i]
+    sid = sport_ids[i]
+    price = 150000 + (i % 10) * 20000
+    lines.append(f"INSERT INTO [CourtSports] ([Id], [CourtId], [SportId], [PricePerHour], [IsPrimarySport]) VALUES ('{csid}', '{cid}', '{sid}', {price:.2f}, 1);")
+
+# 9. WORKING HOURS: 50 records (court i with day of week)
+for i in range(50):
+    whid = str(uuid.uuid4()).upper()
+    cid = court_ids[i]
+    dow = i % 7
+    lines.append(f"INSERT INTO [WorkingHours] ([WorkingHoursId], [CourtId], [DayOfWeek], [StartTime], [EndTime], [SlotDurationMinutes]) VALUES ('{whid}', '{cid}', {dow}, '06:00:00', '22:00:00', 60);")
+
+# 10. COURT BLOCKS: 50 records
+for i in range(50):
+    cbid = str(uuid.uuid4()).upper()
+    cid = court_ids[i]
+    uid = user_ids[i % len(user_ids)]
+    b_start = (datetime.datetime(2026, 11, 1) + datetime.timedelta(days=i, hours=2)).strftime('%Y-%m-%d %H:%M:%S')
+    b_end = (datetime.datetime(2026, 11, 1) + datetime.timedelta(days=i, hours=4)).strftime('%Y-%m-%d %H:%M:%S')
+    reasons = ["Regular turf maintenance and brushing", "Lighting system upgrade & inspection", "Weekly cleaning and sanitization", "Reserved for facility private maintenance", "Post-tournament floor refurbishment"]
+    reason = reasons[i % len(reasons)]
+    lines.append(f"INSERT INTO [CourtBlocks] ([CourtBlockId], [CourtId], [BlockedByUserId], [BlockStart], [BlockEnd], [Reason]) VALUES ('{cbid}', '{cid}', '{uid}', '{b_start}', '{b_end}', N'{reason}');")
+
+# 11. TIME SLOTS: 50 slots (1 for each court i, sport i)
+timeslot_ids = []
+start_hours = [7, 8, 9, 10, 14, 15, 16, 17, 18, 19, 20]
+for i in range(50):
+    tsid = str(uuid.uuid4()).upper()
+    timeslot_ids.append(tsid)
+    cid = court_ids[i]
+    sid = sport_ids[i]
+    slot_date = (datetime.date(2026, 11, 1) + datetime.timedelta(days=(i // 5))).strftime('%Y-%m-%d')
+    sh = start_hours[i % len(start_hours)]
+    st_str = f"{sh:02d}:00:00"
+    et_str = f"{(sh+1):02d}:00:00"
+    price = 150000 + (i % 8) * 25000
+    status = 'booked' # All 50 will be booked by reservations
+    lines.append(f"INSERT INTO [TimeSlots] ([TimeSlotId], [CourtId], [SportId], [Date], [StartTime], [EndTime], [Price], [Status]) VALUES ('{tsid}', '{cid}', '{sid}', '{slot_date}', '{st_str}', '{et_str}', {price:.2f}, N'{status}');")
+
+# 12. RESERVATIONS: 50 reservations (1:1 with TimeSlots, users cycled)
+reservation_ids = []
+for i in range(50):
+    resid = str(uuid.uuid4()).upper()
+    reservation_ids.append(resid)
+    uid = user_ids[i % len(user_ids)]
+    tsid = timeslot_ids[i]
+    res_date = (datetime.datetime(2026, 10, 20) + datetime.timedelta(hours=i*3)).strftime('%Y-%m-%d %H:%M:%S')
+    total_price = 180000 + (i % 10) * 20000
+    p_status = 'paid' if i % 3 != 0 else 'pending'
+    status = 'active'
+    notes = [
+        "Please provide warm-up balls before match",
+        "Group tournament game - friendly match",
+        "Weekly club session booking",
+        "Require extra bibs for team separation",
+        "Corporate team building sports event"
+    ]
+    note = notes[i % len(notes)]
+    lines.append(f"INSERT INTO [Reservations] ([ReservationId], [UserId], [TimeSlotId], [ReservationDate], [Status], [TotalPrice], [PaymentStatus], [Note]) VALUES ('{resid}', '{uid}', '{tsid}', '{res_date}', N'{status}', {total_price:.2f}, N'{p_status}', N'{note}');")
+
+# 13. QR CODES: 50 records (1:1 with ReservationId)
+for i in range(50):
+    qrid = str(uuid.uuid4()).upper()
+    resid = reservation_ids[i]
+    cval = f"SPB-QR-{uuid.uuid4().hex[:12].upper()}-{i+1:04d}"
+    gen_date = (datetime.datetime(2026, 10, 20) + datetime.timedelta(hours=i*3)).strftime('%Y-%m-%d %H:%M:%S')
+    exp_date = (datetime.datetime(2026, 11, 10) + datetime.timedelta(days=i)).strftime('%Y-%m-%d %H:%M:%S')
+    is_used = 1 if i % 2 == 0 else 0
+    lines.append(f"INSERT INTO [QRCodes] ([QRCodeId], [ReservationId], [CodeValue], [GeneratedDate], [ExpiryDate], [IsUsed]) VALUES ('{qrid}', '{resid}', N'{cval}', '{gen_date}', '{exp_date}', {is_used});")
+
+# 14. REVIEWS: 50 records (1:1 with ReservationId)
+review_comments = [
+    "Excellent court condition, clean changing rooms and bright lighting!",
+    "Great service and friendly reception staff. Turf was very well maintained.",
+    "Good court, pleasant experience, easy check-in via mobile QR code.",
+    "Top quality sports facility! Parking is spacious and locker rooms are spotless.",
+    "Fair pricing, well-organized time slots. Will definitely book again next week!"
+]
+for i in range(50):
+    revid = str(uuid.uuid4()).upper()
+    resid = reservation_ids[i]
+    rating = 4 + (i % 2) # 4 or 5 stars
+    comm = review_comments[i % len(review_comments)]
+    rev_date = (datetime.datetime(2026, 10, 22) + datetime.timedelta(hours=i*2)).strftime('%Y-%m-%d %H:%M:%S')
+    lines.append(f"INSERT INTO [Reviews] ([ReviewId], [ReservationId], [Rating], [Comment], [Date], [IsApproved]) VALUES ('{revid}', '{resid}', {rating}, N'{comm}', '{rev_date}', 1);")
+
+# 15. RESERVATION EQUIPMENT: 50 records (link reservation i to equipment i)
+for i in range(50):
+    re_id = str(uuid.uuid4()).upper()
+    resid = reservation_ids[i]
+    eid = equipment_ids[i]
+    qty = 1 + (i % 3)
+    total_eq_price = qty * 25000.00
+    lines.append(f"INSERT INTO [ReservationEquipment] ([Id], [ReservationId], [EquipmentId], [Quantity], [TotalPrice]) VALUES ('{re_id}', '{resid}', '{eid}', {qty}, {total_eq_price:.2f});")
+
+lines.append("COMMIT TRANSACTION;")
+lines.append("PRINT 'All 50 records per table seeded successfully!';")
+lines.append("END TRY")
+lines.append("BEGIN CATCH")
+lines.append("    ROLLBACK TRANSACTION;")
+lines.append("    PRINT 'Error occurred: ' + ERROR_MESSAGE();")
+lines.append("    THROW;")
+lines.append("END CATCH;")
+lines.append("GO")
+
+output_sql = "\n".join(lines)
+with open("c:/Users/hmqua/Downloads/sportbook/seed_data.sql", "w", encoding="utf-8") as f:
+    f.write(output_sql)
+
+print(f"Generated seed_data.sql with {len(lines)} lines.")
