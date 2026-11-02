@@ -36,6 +36,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// Swagger / OpenAPI documentation
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 // CORS configuration to allow Flutter client access
 builder.Services.AddCors(options =>
 {
@@ -50,6 +54,13 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 app.UseCors("AllowFlutter");
+
+// Enable Swagger UI in Development
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseAuthentication();
 

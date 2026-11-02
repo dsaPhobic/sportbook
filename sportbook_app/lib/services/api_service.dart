@@ -1,10 +1,20 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  // Backend API base URL
-  static const String baseUrl = 'http://localhost:5029/api';
+
+  static const String _androidBaseUrl = 'http://192.168.1.229:5029/api';
+  static const String _desktopBaseUrl = 'http://localhost:5029/api';
+
+
+  static String get baseUrl {
+    if (kIsWeb) return _desktopBaseUrl;
+    if (Platform.isAndroid) return _androidBaseUrl;
+    return _desktopBaseUrl;                    
+  }
 
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
