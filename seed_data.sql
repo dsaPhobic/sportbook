@@ -3,6 +3,12 @@ GO
 SET NOCOUNT ON;
 BEGIN TRANSACTION;
 BEGIN TRY
+-- Base roles (referenced elsewhere in this script and by the app's authorization)
+INSERT INTO [Roles] ([RoleId], [Name], [Description]) VALUES ('0BBF8EA7-78F8-4B04-A8F0-BDB4B1D77F38', N'client', N'System role for client');
+INSERT INTO [Roles] ([RoleId], [Name], [Description]) VALUES ('636AEA97-4FD2-4E06-8CC3-D559D178FF71', N'administrator', N'System role for administrator');
+-- Base admin user (referenced by CourtBlocks and Reservations below; password: Password123!)
+INSERT INTO [Users] ([UserId], [FirstName], [LastName], [Email], [PasswordHash], [Phone], [RegistrationDate], [IsActive]) VALUES ('B8194F05-4863-4634-B0E5-7736B830D73E', N'Admin', N'Owner', N'admin@sportbook.local', N'$2a$11$wSLCJClDW2KJez4GGNRJ8.k2MAZJxoTGdp.3IUEOEGSnmrWzgMKAC', N'0900000001', '2026-01-01 00:00:00', 1);
+INSERT INTO [UserRoles] ([Id], [UserId], [RoleId], [AssignedDate]) VALUES ('A1B2C3D4-0000-4A11-B3C2-D5E6F7A8B9C0', 'B8194F05-4863-4634-B0E5-7736B830D73E', '636AEA97-4FD2-4E06-8CC3-D559D178FF71', '2026-01-01 00:00:00');
 INSERT INTO [Roles] ([RoleId], [Name], [Description]) VALUES ('D9F41BB5-999F-4451-B6CF-F96D7E6B5E39', N'manager', N'System role for manager');
 INSERT INTO [Roles] ([RoleId], [Name], [Description]) VALUES ('48FB2ACF-9B4E-4C7B-B15E-29B0FD99620A', N'supervisor', N'System role for supervisor');
 INSERT INTO [Roles] ([RoleId], [Name], [Description]) VALUES ('AD726CEE-8067-4D8F-978A-E349A1E1C5B5', N'court_keeper', N'System role for court keeper');
